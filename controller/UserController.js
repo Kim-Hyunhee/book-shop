@@ -1,14 +1,24 @@
 const conn = require("../mariadb");
 const { StatusCodes } = require("http-status-codes");
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
 const dotenv = require("dotenv");
 dotenv.config();
 
 const join = (req, res) => {
   const { email, password } = req.body;
 
-  const sql = `INSERT INTO users (email, password) VALUES (?, ?)`;
-  const values = [email, password];
+  const sql = `INSERT INTO users (email, password, salt) VALUES (?, ?, ?)`;
+
+  // 회원 가입 시 비밀번호를 암호화해서 암호화 된 비밀번호와 salt값을 같이 저장
+  // 로그인 시, 이메일&비밀번호 => salt값 꺼내서 비밀번호를 암호화 해보고 => 디비 비밀번호랑 비교
+
+  const salt = crypto.randomBytes(10).toString("base64");
+  const hashedPassword = crypto
+    .pbkdf2Sync(password, salt, 10000, 10, "sha512")
+    .toString("base64");
+
+  const values = [email, hashedPassword, salt];
 
   conn.query(sql, values, (err, results) => {
     if (err) {
