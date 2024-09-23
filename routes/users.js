@@ -1,11 +1,10 @@
 const express = require("express");
 const router = express.Router();
+const join = require("../controller/UserController");
 
 router.use(express.json());
 
-router.post("/join", (req, res) => {
-  res.json("회원가입");
-});
+router.post("/join", join);
 
 router.post("/login", (req, res) => {
   res.json("로그인");
