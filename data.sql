@@ -10,6 +10,9 @@ VALUES ("백설공주들", "종이책", 2, "사과..", "빨간 사과..", "김�
 INSERT INTO Bookshop.books (title, form, isbn, summary, detail, author, pages, contents, price, pub_date)
 VALUES ("흥부와 놀부들", "종이책", 3, "제비..", "까만 제비..", "김제비", 100, "목차입니다.", 20000, "2023-12-08");
 
+SELECT * FROM books LEFT JOIN category ON books.category_id = category.id;
+
+SELECT * FROM books LEFT JOIN category ON books.category_id = category.id WHERE books.id = 1;
 -- INSERT INTO Bookshop.books (title, img, category_id, form, isbn, summary, detail, author, pages, contents, price, pub_date)
 -- VALUES ("콩쥐 팥쥐", 4, 0, "ebook", 4, "콩팥..", "콩심은데 콩나고..", "김콩팥", 100, "목차입니다.", 20000, "2023-12-07");
 
