@@ -12,18 +12,20 @@ const allBooks = (req, res) => {
 
   const offset = limit * (currentPage - 1);
 
-  let sql = `SELECT * FROM books LIMIT ? OFFSET ?`;
-  let values = [parseInt(limit), offset];
+  let sql = `SELECT * FROM books`;
+  let values = [];
   if (categoryId && news) {
-    sql += ` WHERE category_id = ? AND pub_date BETWEEN DATE_SUB(NOW(), INTERVAL 1 MONTH) AND NOW() `;
-    values.push(categoryId, news);
+    sql += ` WHERE category_id = ? AND pub_date BETWEEN DATE_SUB(NOW(), INTERVAL 1 MONTH) AND NOW()`;
+    values.push(categoryId);
   } else if (categoryId) {
     sql += ` WHERE category_id = ?`;
     values.push(categoryId);
   } else if (news) {
     sql += ` WHERE pub_date BETWEEN DATE_SUB(NOW(), INTERVAL 1 MONTH) AND NOW()`;
-    values.push(news);
   }
+
+  sql += ` LIMIT ? OFFSET ?`;
+  values.push(parseInt(limit), offset);
 
   conn.query(sql, values, (err, results) => {
     if (err) {
