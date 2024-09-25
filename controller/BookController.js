@@ -3,19 +3,26 @@ const { StatusCodes } = require("http-status-codes");
 
 // (카테고리별,신간 여부) 전체 도서 목록 조회
 const allBooks = (req, res) => {
-  const { categoryId, news } = req.query;
+  const { categoryId, news, limit, currentPage } = req.query;
 
-  let sql = `SELECT * FROM books`;
-  let values = [];
+  // limit : page 당 도서 수      ex. 3
+  // currentPage : 현재 몇 페이지 ex. 1, 2, 3, ...
+  // offset :                         0, 3, 6
+  //                                  limit * (currentPage - 1)
+
+  const offset = limit * (currentPage - 1);
+
+  let sql = `SELECT * FROM books LIMIT ? OFFSET ?`;
+  let values = [parseInt(limit), offset];
   if (categoryId && news) {
-    sql += ` WHERE category_id = ? AND pub_date BETWEEN DATE_SUB(NOW(), INTERVAL 1 MONTH) AND NOW()`;
-    values = [categoryId, news];
+    sql += ` WHERE category_id = ? AND pub_date BETWEEN DATE_SUB(NOW(), INTERVAL 1 MONTH) AND NOW() `;
+    values.push(categoryId, news);
   } else if (categoryId) {
     sql += ` WHERE category_id = ?`;
-    values = categoryId;
+    values.push(categoryId);
   } else if (news) {
     sql += ` WHERE pub_date BETWEEN DATE_SUB(NOW(), INTERVAL 1 MONTH) AND NOW()`;
-    values = news;
+    values.push(news);
   }
 
   conn.query(sql, values, (err, results) => {
