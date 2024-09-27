@@ -17,13 +17,13 @@ const addToCart = (req, res) => {
 };
 
 const getCartItems = (req, res) => {
-  const { userId } = req.body;
+  const { userId, selected } = req.body;
 
   const sql = `SELECT cartItems.id, book_id, books.title, books.summary, quantity, books.price
                FROM cartItems LEFT JOIN books
                ON cartItems.book_id = books.id
-               WHERE user_id = ?;`;
-  conn.query(sql, userId, (err, results) => {
+               WHERE user_id = ? AND cartItems.id IN (?);`;
+  conn.query(sql, [userId, selected], (err, results) => {
     if (err) {
       console.log(err);
       return res.status(StatusCodes.BAD_REQUEST).end();

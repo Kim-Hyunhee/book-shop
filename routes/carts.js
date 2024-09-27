@@ -12,8 +12,4 @@ router.post("/", addToCart);
 router.get("/", getCartItems);
 router.delete("/:id", removeCartItem);
 
-// router.get("/", (req, res) => {
-//     res.json("장바구니 담기");
-//   });
-
 module.exports = router;
