@@ -48,3 +48,5 @@ INSERT INTO likes(user_id, liked_book_id) VALUES (2, 5);
 DELETE FROM likes WHERE user_id = 1 AND liked_book_id = 1;
 
 SELECT *, (SELECT count(*) FROM likes WHERE liked_book_id = books.id) AS likes FROM books;
+
+INSERT INTO cartItems(book_id, quantity, user_id) VALUES (1, 1, 1);
