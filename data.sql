@@ -47,6 +47,22 @@ INSERT INTO likes(user_id, liked_book_id) VALUES (2, 5);
 
 DELETE FROM likes WHERE user_id = 1 AND liked_book_id = 1;
 
+// 장바구니에서 선택한(장바구니 도서 id) 아에팀 목록 조회(=선택한 장바구니 상품 목록 조회)
 SELECT *, (SELECT count(*) FROM likes WHERE liked_book_id = books.id) AS likes FROM books;
 
 INSERT INTO cartItems(book_id, quantity, user_id) VALUES (1, 1, 1);
+
+// 주문하기
+// 배송 정보 입력
+INSERT INTO delivery (address, receiver, contact) VALUES ("서울시 서초구", "김현현", "010-5555-5555");
+const delivery_id = SELECT MAX(id) FROM delivery;
+
+// 주문 정보 입력
+INSERT INTO orders (book_title, total_quantity, total_price, user_id, delivery_id)
+VALUES ("어린왕자들", 3, 60000, 1, delivery_id);
+const order_id = SELECT MAX(id) FROM orders;
+
+// 주문 상세 목록 입력
+INSERT INTO orderedBook (order_id, book_id, quantity) VALUES (order_id, 3, 2);
+
+SELECT MAX(id) FROM orderedBook;
