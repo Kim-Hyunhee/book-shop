@@ -66,3 +66,6 @@ const order_id = SELECT MAX(id) FROM orders;
 INSERT INTO orderedBook (order_id, book_id, quantity) VALUES (order_id, 3, 2);
 
 SELECT MAX(id) FROM orderedBook;
+
+// 결제된 도서 장바구니 삭제
+DELETE FROM Bookshop.cartItems WHERE id IN (1,2,3);
