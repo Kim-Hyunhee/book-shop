@@ -5,6 +5,7 @@ const { StatusCodes } = require("http-status-codes");
 
 // (카테고리별,신간 여부) 전체 도서 목록 조회
 const allBooks = (req, res) => {
+  let allBooksRes = {};
   const { categoryId, news, limit, currentPage } = req.query;
 
   // limit : page 당 도서 수      ex. 3
@@ -14,7 +15,7 @@ const allBooks = (req, res) => {
 
   const offset = limit * (currentPage - 1);
 
-  let sql = `SELECT *, (SELECT count(*) FROM likes WHERE liked_book_id = books.id) AS likes FROM books`;
+  let sql = `SELECT sql_calc_found_rows *, (SELECT count(*) FROM likes WHERE liked_book_id = books.id) AS likes FROM books`;
   let values = [];
   if (categoryId && news) {
     sql += ` WHERE category_id = ? AND pub_date BETWEEN DATE_SUB(NOW(), INTERVAL 1 MONTH) AND NOW()`;
@@ -36,10 +37,26 @@ const allBooks = (req, res) => {
     }
 
     if (results.length) {
-      return res.status(StatusCodes.OK).json(results);
+      allBooksRes.books = results;
     } else {
       return res.status(StatusCodes.NOT_FOUND).end();
     }
+  });
+
+  sql = `SELECT found_rows()`;
+  conn.query(sql, (err, results) => {
+    if (err) {
+      console.log(err);
+      return res.status(StatusCodes.BAD_REQUEST).end();
+    }
+
+    let pagination = {};
+    pagination.currentPage = parseInt(currentPage);
+    pagination.totalCount = results[0]["found_rows()"];
+
+    allBooksRes.pagination = pagination;
+
+    return res.status(StatusCodes.OK).json(allBooksRes);
   });
 };
 
