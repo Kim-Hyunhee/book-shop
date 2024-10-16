@@ -72,39 +72,64 @@ const deleteCartItems = async (conn, items) => {
 };
 
 const getOrders = async (req, res) => {
-  const conn = await mariadb.createConnection({
-    host: "127.0.0.1",
-    user: "root",
-    password: "root",
-    database: "Bookshop",
-    dateStrings: true,
-  });
+  const authorization = ensureAuthorization(req, res);
 
-  const sql = `SELECT orders.id, created_at, address, receiver, contact,
-             book_title, total_quantity, total_price, 
-             FROM orders 
-             LEFT JOIN delivery 
-             ON orders.delivery_id = delivery.id;`;
-  const [rows, fields] = await conn.query(sql);
-  return res.status(StatusCodes.OK).json(rows);
+  if (authorization instanceof jwt.TokenExpiredError) {
+    return res
+      .status(StatusCodes.UNAUTHORIZED)
+      .json({ message: "로그인 세션이 만료되었습니다. 다시 로그인 해주세요." });
+  } else if (authorization instanceof jwt.JsonWebTokenError) {
+    return res
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ message: "잘못된 토큰입니다." });
+  } else {
+    const conn = await mariadb.createConnection({
+      host: "127.0.0.1",
+      user: "root",
+      password: "root",
+      database: "Bookshop",
+      dateStrings: true,
+    });
+
+    const sql = `SELECT orders.id, created_at, address, receiver, contact,
+               book_title, total_quantity, total_price, 
+               FROM orders 
+               LEFT JOIN delivery 
+               ON orders.delivery_id = delivery.id;`;
+    const [rows, fields] = await conn.query(sql);
+    return res.status(StatusCodes.OK).json(rows);
+  }
 };
 
 const getOrderDetail = async (req, res) => {
-  const orderId = req.params.id;
-  const conn = await mariadb.createConnection({
-    host: "127.0.0.1",
-    user: "root",
-    password: "root",
-    database: "Bookshop",
-    dateStrings: true,
-  });
+  const authorization = ensureAuthorization(req, res);
 
-  const sql = `SELECT book_id, title, author, price, quantity
-             FROM orderedBook LEFT JOIN books
-             ON orderedBook.book_id = books.id
-             WHERE order_id = ?;`;
-  const [rows, fields] = await conn.query(sql, [orderId]);
-  return res.status(StatusCodes.OK).json(rows);
+  if (authorization instanceof jwt.TokenExpiredError) {
+    return res
+      .status(StatusCodes.UNAUTHORIZED)
+      .json({ message: "로그인 세션이 만료되었습니다. 다시 로그인 해주세요." });
+  } else if (authorization instanceof jwt.JsonWebTokenError) {
+    return res
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ message: "잘못된 토큰입니다." });
+  } else {
+    const orderId = req.params.id;
+
+    const conn = await mariadb.createConnection({
+      host: "127.0.0.1",
+      user: "root",
+      password: "root",
+      database: "Bookshop",
+      dateStrings: true,
+    });
+
+    const sql = `SELECT book_id, title, author, price, quantity
+               FROM orderedBook LEFT JOIN books
+               ON orderedBook.book_id = books.id
+               WHERE order_id = ?;`;
+    const [rows, fields] = await conn.query(sql, [orderId]);
+    return res.status(StatusCodes.OK).json(rows);
+  }
 };
 
 module.exports = { order, getOrders, getOrderDetail };
