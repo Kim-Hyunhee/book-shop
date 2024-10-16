@@ -1,3 +1,5 @@
+const ensureAuthorization = require("../auth"); // 인증 모듈
+const jwt = require("jsonwebtoken");
 const conn = require("../mariadb");
 const { StatusCodes } = require("http-status-codes");
 
@@ -42,28 +44,49 @@ const allBooks = (req, res) => {
 };
 
 const bookDetail = (req, res) => {
-  const bookId = req.params.id;
-  const { userId } = req.body;
-  const sql = `SELECT *,
-                    (SELECT count(*) FROM likes WHERE liked_book_id = books.id) AS likes, 
-                    (SELECT EXISTS (SELECT * FROM likes WHERE user_id = ? AND liked_book_id = ?)) AS liked
-                FROM books 
-                LEFT JOIN category 
-                ON books.category_id = category.category_id
-                WHERE books.id=?;`;
-  const values = [userId, bookId, bookId];
-  conn.query(sql, values, (err, results) => {
-    if (err) {
-      console.log(err);
-      return res.status(StatusCodes.BAD_REQUEST).end();
+  // 로그인 상태가 아니면 => liked 빼고 보내주면 되고
+  // 로그인 상태이면 => liked 추가해서
+  const authorization = ensureAuthorization(req, res);
+
+  if (authorization instanceof jwt.TokenExpiredError) {
+    return res
+      .status(StatusCodes.UNAUTHORIZED)
+      .json({ message: "로그인 세션이 만료되었습니다. 다시 로그인 해주세요." });
+  } else if (authorization instanceof jwt.JsonWebTokenError) {
+    return res
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ message: "잘못된 토큰입니다." });
+  } else {
+    const bookId = req.params.id;
+
+    let sql = `SELECT *, 
+               (SELECT count(*) FROM likes WHERE liked_book_id = books.id) AS likes`;
+    const values = [bookId];
+
+    // 로그인된 상태라면 liked 값을 추가
+    if (authorization.id) {
+      sql += `, (SELECT EXISTS (SELECT * FROM likes WHERE user_id = ? AND liked_book_id = ?)) AS liked`;
+      values.unshift(authorization.id, bookId); // userId와 bookId를 values 배열 앞에 추가
     }
 
-    if (results[0]) {
-      return res.status(StatusCodes.OK).json(results[0]);
-    } else {
-      return res.status(StatusCodes.NOT_FOUND).end();
-    }
-  });
+    sql += ` FROM books 
+            LEFT JOIN category 
+            ON books.category_id = category.category_id
+            WHERE books.id=?;`;
+
+    conn.query(sql, values, (err, results) => {
+      if (err) {
+        console.log(err);
+        return res.status(StatusCodes.BAD_REQUEST).end();
+      }
+
+      if (results[0]) {
+        return res.status(StatusCodes.OK).json(results[0]);
+      } else {
+        return res.status(StatusCodes.NOT_FOUND).end();
+      }
+    });
+  }
 };
 
 module.exports = { allBooks, bookDetail };
