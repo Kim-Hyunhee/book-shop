@@ -37,6 +37,11 @@ const allBooks = (req, res) => {
     }
 
     if (results.length) {
+      results.map(function (result) {
+        result.pubDate = result.pub_date;
+        delete result.pub_date;
+      });
+
       allBooksRes.books = results;
     } else {
       return res.status(StatusCodes.NOT_FOUND).end();
@@ -98,6 +103,13 @@ const bookDetail = (req, res) => {
       }
 
       if (results[0]) {
+        const { category_id, pub_date, category_name, ...rest } = results[0];
+        results[0] = {
+          ...rest,
+          categoryId: category_id,
+          pubDate: pub_date,
+          categoryName: category_name,
+        };
         return res.status(StatusCodes.OK).json(results[0]);
       } else {
         return res.status(StatusCodes.NOT_FOUND).end();

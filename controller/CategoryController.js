@@ -9,6 +9,13 @@ const allCategory = (req, res) => {
       return res.status(StatusCodes.BAD_REQUEST).end();
     }
 
+    results = results.map(function (result) {
+      const { category_id, category_name } = result;
+      return {
+        categoryId: category_id,
+        categoryName: category_name,
+      };
+    });
     return res.status(StatusCodes.OK).json(results);
   });
 };

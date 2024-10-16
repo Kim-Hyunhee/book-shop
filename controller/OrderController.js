@@ -92,12 +92,24 @@ const getOrders = async (req, res) => {
     });
 
     const sql = `SELECT orders.id, created_at, address, receiver, contact,
-               book_title, total_quantity, total_price, 
+               book_title, total_quantity, total_price
                FROM orders 
                LEFT JOIN delivery 
                ON orders.delivery_id = delivery.id;`;
     const [rows, fields] = await conn.query(sql);
-    return res.status(StatusCodes.OK).json(rows);
+
+    const results = rows.map(function (row) {
+      const { created_at, book_title, total_quantity, total_price, ...res } =
+        row;
+      return {
+        ...res,
+        createdAt: created_at,
+        bookTitle: book_title,
+        totalQuantity: total_quantity,
+        totalPrice: total_price,
+      };
+    });
+    return res.status(StatusCodes.OK).json(results);
   }
 };
 
@@ -123,7 +135,7 @@ const getOrderDetail = async (req, res) => {
       dateStrings: true,
     });
 
-    const sql = `SELECT book_id, title, author, price, quantity
+    const sql = `SELECT book_id AS bookId, title, author, price, quantity
                FROM orderedBook LEFT JOIN books
                ON orderedBook.book_id = books.id
                WHERE order_id = ?;`;
